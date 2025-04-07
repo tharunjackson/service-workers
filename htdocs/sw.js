@@ -12,17 +12,27 @@ var cachedAssets = [
   "/img/global/icon-linked-in.svg"
 ];
 
-self.addEventListener("install", function(event) {
+self.addEventListener('install', event => {
   event.waitUntil(
-    caches.open(cacheVersion).then(function(cache) {
-      return cache.addAll(cachedAssets);
-    }).then(function() {
-      return self.skipWaiting();
-    })
+    caches.open(CACHE_NAME)
+      .then(cache => {
+        console.log('Opened cache');
+        return cache.addAll(ASSETS_TO_CACHE);
+      })
   );
 });
 
-// Activate event - Claims control immediately
-self.addEventListener("activate", function(event) {
-  return self.clients.claim();
+// Fetch event - serves cached content when available
+self.addEventListener('fetch', event => {
+  event.respondWith(
+    caches.match(event.request)
+      .then(response => {
+        // Cache hit - return response
+        if (response) {
+          return response;
+        }
+        // Not in cache - fetch from network
+        return fetch(event.request);
+      })
+  );
 });
